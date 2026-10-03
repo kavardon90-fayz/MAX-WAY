@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Savat - MAX WAY</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            color: #222;
+        }
+
+        header {
+            background: white;
+            padding: 20px 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        header h2 {
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* HAR BIR TAOM ALOHIDA KARTOCHKA */
+        .cart-item {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            width: 100%;
+            gap: 30px;
+
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        /* RASM + MAHSULOT MA'LUMOTI */
+        .product-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .cart-image {
+            width: 120px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .product-info h2 {
+            margin: 0 0 10px 0;
+        }
+
+        .product-info p {
+            margin: 10px 0 0 0;
+            color: #666;
+        }
+
+        /* + / - */
+        .quantity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .quantity-button {
+            width: 38px;
+            height: 38px;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            background: #222;
+            color: white;
+
+            border-radius: 8px;
+            text-decoration: none;
+
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .quantity-button:hover {
+            opacity: 0.8;
+        }
+
+        .quantity-number {
+            min-width: 35px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* O'NG TOMON - NARX VA O'CHIRISH */
+        .price {
+            width: 160px;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+
+            font-size: 20px;
+            font-weight: bold;
+
+            flex-shrink: 0;
+        }
+
+        .remove-button {
+            display: block;
+
+            width: 140px;
+            padding: 9px 10px;
+
+            background: #d32f2f;
+            color: white;
+
+            border-radius: 8px;
+            text-decoration: none;
+
+            font-size: 14px;
+            font-weight: normal;
+
+            text-align: center;
+        }
+
+        .remove-button:hover {
+            opacity: 0.8;
+        }
+
+        /* JAMI */
+        <!-- BUYURTMA BERISH -->
+{% if cart_items %}
+
+    <div style="margin-top: 20px; text-align: right;">
+
+        <a href="{% url 'order_page' %}"
+           style="
+               display: inline-block;
+               padding: 14px 30px;
+               background: #ff9800;
+               color: white;
+               text-decoration: none;
+               border-radius: 10px;
+               font-size: 18px;
+               font-weight: bold;
+           ">
+            📦 Buyurtma berish
+        </a>
+
+    </div>
+
+{% endif %}
+        <!-- BUYURTMA BERISH -->
+{% if cart_items %}
+
+    <div style="margin-top: 20px; text-align: right;">
+
+        <a href="{% url 'order_page' %}"
+           style="
+               display: inline-block;
+               padding: 14px 30px;
+               background: #ff9800;
+               color: white;
+               text-decoration: none;
+               border-radius: 10px;
+               font-size: 18px;
+               font-weight: bold;
+           ">
+            📦 Buyurtma berish
+        </a>
+
+    </div>
+
+{% endif %}
+        .cart-total {
+            background: white;
+            padding: 20px;
+            margin-top: 25px;
+            border-radius: 12px;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            font-size: 22px;
+            font-weight: bold;
+
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        .cart-total strong {
+            font-size: 24px;
+        }
+
+        .empty {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        /* TELEFON UCHUN */
+        @media (max-width: 600px) {
+
+            header {
+                padding: 20px;
+            }
+
+            .container {
+                padding: 0 10px;
+            }
+
+            .cart-item {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 15px;
+                gap: 15px;
+            }
+
+            .product-info {
+                width: 100%;
+                gap: 12px;
+            }
+
+            .cart-image {
+                width: 90px;
+                height: 75px;
+            }
+
+            .product-info h2 {
+                font-size: 18px;
+            }
+
+            .price {
+                width: 100%;
+                align-items: stretch;
+                text-align: center;
+                font-size: 18px;
+            }
+
+            .remove-button {
+                width: 100%;
+            }
+
+            .cart-total {
+                font-size: 18px;
+            }
+
+            .cart-total strong {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h2>MAX WAY 🛒 Savat</h2>
+</header>
+
+<div class="container">
+
+    <h1>Savat</h1>
+
+    {% for item in cart_items %}
+
+        <div class="cart-item">
+
+            <!-- RASM VA MAHSULOT -->
+            <div class="product-info">
+
+                {% if item.product.image %}
+                    <img
+                        src="{{ item.product.image.url }}"
+                        alt="{{ item.product.title }}"
+                        class="cart-image"
+                    >
+                {% endif %}
+
+                <div>
+
+                    <h2>{{ item.product.title }}</h2>
+
+                    <!-- MIQDOR -->
+                    <div class="quantity">
+
+                        <a href="{% url 'decrease_cart' item.product.id %}"
+                           class="quantity-button">
+                            −
+                        </a>
+
+                        <span class="quantity-number">
+                            {{ item.quantity }}
+                        </span>
+
+                        <a href="{% url 'increase_cart' item.product.id %}"
+                           class="quantity-button">
+                            +
+                        </a>
+
+                    </div>
+
+                    <p>
+                        {{ item.product.price }} so'm × {{ item.quantity }}
+                    </p>
+
+                </div>
+
+            </div>
+
+            <!-- NARX VA O'CHIRISH -->
+            <div class="price">
+
+                <span>
+                    {{ item.total }} so'm
+                </span>
+
+                <a href="{% url 'remove_from_cart' item.product.id %}"
+                   class="remove-button">
+                    🗑 O‘chirish
+                </a>
+
+            </div>
+
+        </div>
+
+    {% empty %}
+
+        <div class="empty">
+            Savat hozircha bo‘sh.
+        </div>
+
+    {% endfor %}
+
+
+    <!-- JAMI SUMMA -->
+   {% if cart_items %}
+
+    <div class="cart-total">
+
+        <span>
+            JAMI:
+        </span>
+
+        <strong>
+            {{ grand_total }} so'm
+        </strong>
+
+    </div>
+
+    <div style="margin-top: 20px; text-align: right;">
+
+        <a href="{% url 'order_page' %}"
+           style="
+               display: inline-block;
+               padding: 14px 30px;
+               background: #ff9800;
+               color: white;
+               text-decoration: none;
+               border-radius: 10px;
+               font-size: 18px;
+               font-weight: bold;
+           ">
+            📦 Buyurtma berish
+        </a>
+
+    </div>
+
+{% endif %}
