@@ -1,188 +1,127 @@
-# 🍔 MAX WAY — Food Delivery API
+## 🔗 Foydali havolalar
 
-**MAX WAY** — oziq-ovqat buyurtma qilish va yetkazib berish uchun ishlab chiqilgan Django REST Framework asosidagi web API loyihasi.
+| Resurs               | Havola                                       |
+| -------------------- | -------------------------------------------- |
+| 📦 GitHub Repository | `https://github.com/kavardon90-fayz/MAX-WAY` |
+| 📖 Swagger API       | `http://127.0.0.1:8000/api/docs/`            |
+| 📋 OpenAPI Schema    | `http://127.0.0.1:8000/api/schema/`          |
 
-Loyiha orqali mahsulotlarni ko‘rish, kategoriyalar bilan ishlash, mijoz yaratish, buyurtma berish va buyurtma tarkibini boshqarish mumkin.
+> **Eslatma:** Swagger va OpenAPI manzillari loyiha lokal serverda ishga tushirilganda ishlaydi. Deploy qilingandan keyin ular production server manziliga almashtiriladi.
 
-## 🚀 Texnologiyalar
+## 🧪 API test natijalari
 
-* Python 3.13
-* Django 6.1
-* Django REST Framework 3.18
-* Simple JWT
-* drf-spectacular
-* SQLite
-* Pillow
-* Swagger / OpenAPI
-* Git & GitHub
+API endpointlar Swagger orqali muvaffaqiyatli test qilindi.
 
-## 📌 Asosiy imkoniyatlar
+### JWT Authentication
 
-* 🔐 JWT orqali autentifikatsiya
-* 📂 Kategoriyalar bilan ishlash
-* 🍔 Mahsulotlarni boshqarish
-* 👤 Mijozlarni boshqarish
-* 🛒 Buyurtmalar yaratish
-* 📦 Buyurtma tarkibini boshqarish
-* 🖼 Mahsulot rasmlarini yuklash
-* 📍 Yetkazib berish manzili va koordinatalari
-* 💳 To‘lov turi
-* 🚚 Yetkazib berish turi
-* 📖 Swagger orqali API hujjatlari
-
-## 🔑 API autentifikatsiyasi
-
-Loyiha JWT authentication tizimidan foydalanadi.
-
-Token olish:
+JWT token olish:
 
 ```text
 POST /api/token/
 ```
 
-Access token yangilash:
+Token muvaffaqiyatli olingandan so‘ng himoyalangan endpointlarga murojaat qilish mumkin.
+
+### Category
+
+Kategoriya yaratish:
 
 ```text
-POST /api/token/refresh/
+POST /shop/categories/
 ```
 
-Swagger'da tokenni olgandan so‘ng **Authorize** tugmasi orqali JWT tokenni kiritish mumkin.
-
-## 📚 Swagger API Documentation
-
-Loyihani ishga tushirgandan so‘ng Swagger hujjatlari quyidagi manzilda mavjud:
+Natija:
 
 ```text
-http://127.0.0.1:8000/api/docs/
+HTTP 201 Created
 ```
 
-Swagger orqali API endpointlarni ko‘rish va test qilish mumkin.
+### Product
 
-## 📋 Asosiy API endpointlar
-
-### Categories
+Mahsulotni olish:
 
 ```text
-/shop/categories/
+GET /shop/products/1/
 ```
 
-Kategoriyalarni ko‘rish, yaratish, o‘zgartirish va o‘chirish.
-
-### Products
+Natija:
 
 ```text
-/shop/products/
+HTTP 200 OK
 ```
 
-Mahsulotlarni boshqarish.
+Misol:
 
-### Customers
+```json
+{
+  "id": 1,
+  "title": "osh",
+  "category": 3,
+  "category_title": "milliy taomlar",
+  "cost": 25000,
+  "price": 25000
+}
+```
+
+### Customer
+
+Mijoz yaratish:
 
 ```text
-/shop/customers/
+POST /shop/customers/
 ```
 
-Mijozlarni boshqarish.
-
-### Orders
+Natija:
 
 ```text
-/shop/orders/
+HTTP 201 Created
 ```
 
-Buyurtmalarni boshqarish.
+### Order
 
-### Order Products
+Buyurtma yaratish:
 
 ```text
-/shop/order-products/
+POST /shop/orders/
 ```
 
-Buyurtma tarkibidagi mahsulotlarni boshqarish.
-
-## 🗂 Loyiha tuzilishi
+Natija:
 
 ```text
-MAX WAY/
-│
-├── config/
-│   ├── settings.py
-│   ├── urls.py
-│   └── ...
-│
-├── shop/
-│   ├── models.py
-│   ├── serializers.py
-│   ├── views.py
-│   ├── urls.py
-│   └── ...
-│
-├── products/
-├── media/
-├── .gitignore
-├── db.sqlite3
-├── manage.py
-└── README.md
+HTTP 201 Created
 ```
 
-## ⚙️ Loyihani ishga tushirish
+### Order Product
 
-Repository'ni yuklab olgandan so‘ng virtual environment yaratish:
-
-```bash
-python -m venv .venv
-```
-
-Virtual environment'ni faollashtirish:
-
-Windows:
-
-```bash
-.venv\Scripts\activate
-```
-
-Kerakli paketlarni o‘rnatish:
-
-```bash
-pip install -r requirements.txt
-```
-
-Migrationlarni bajarish:
-
-```bash
-python manage.py migrate
-```
-
-Serverni ishga tushirish:
-
-```bash
-python manage.py runserver
-```
-
-Server:
+Buyurtmaga mahsulot qo‘shish:
 
 ```text
-http://127.0.0.1:8000/
+POST /shop/order-products/
 ```
 
-Swagger:
+Natija:
+
+```text
+HTTP 201 Created
+```
+
+Misol:
+
+```json
+{
+  "id": 24,
+  "count": 1,
+  "price": 30000
+}
+```
+
+### API Documentation
+
+Barcha endpointlarni Swagger orqali ko‘rish va test qilish mumkin:
 
 ```text
 http://127.0.0.1:8000/api/docs/
 ```
 
-## 👨‍💻 Muallif
+Ushbu loyiha davomida asosiy CRUD operatsiyalari va JWT authentication muvaffaqiyatli tekshirildi.
 
-**Bahrom Baxtiyor Normatov**
-
-MAX WAY — Django REST Framework kurs loyihasi.
-
-## 📄 Loyiha holati
-
-🚧 **Development / Course Project**
-
-Loyiha Django REST Framework asosida ishlab chiqilgan va keyingi bosqichlarda production serverga deploy qilish rejalashtirilgan.
-
----
-
-⭐ Agar loyiha foydali bo‘lsa, repository'ga Star qoldiring.
