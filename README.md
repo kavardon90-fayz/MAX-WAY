@@ -1,16 +1,16 @@
 ## 🔗 Foydali havolalar
 
-| Resurs               | Havola                                       |
-| -------------------- | -------------------------------------------- |
-| 📦 GitHub Repository | `https://github.com/kavardon90-fayz/MAX-WAY` |
-| 📖 Swagger API       | `http://127.0.0.1:8000/api/docs/`            |
-| 📋 OpenAPI Schema    | `http://127.0.0.1:8000/api/schema/`          |
+| Resurs | Havola |
+|---|---|
+| 📦 GitHub Repository | https://github.com/kavardon90-fayz/MAX-WAY |
+| 📖 Swagger API | http://13.48.55.73/api/docs/ |
+| 📋 OpenAPI Schema | http://13.48.55.73/api/schema/ |
 
-> **Eslatma:** Swagger va OpenAPI manzillari loyiha lokal serverda ishga tushirilganda ishlaydi. Deploy qilingandan keyin ular production server manziliga almashtiriladi.
+> **Eslatma:** Swagger va OpenAPI hujjatlari AWS serveriga joylashtirilgan va yuqoridagi havolalar orqali ochiladi.
 
 ## 🧪 API test natijalari
 
-API endpointlar Swagger orqali muvaffaqiyatli test qilindi.
+API endpointlari Swagger orqali tekshirildi.
 
 ### JWT Authentication
 
@@ -20,7 +20,7 @@ JWT token olish:
 POST /api/token/
 ```
 
-Token muvaffaqiyatli olingandan so‘ng himoyalangan endpointlarga murojaat qilish mumkin.
+Token olingandan so‘ng ruxsat talab qiladigan endpointlarga murojaat qilish mumkin.
 
 ### Category
 
@@ -30,11 +30,7 @@ Kategoriya yaratish:
 POST /shop/categories/
 ```
 
-Natija:
-
-```text
-HTTP 201 Created
-```
+Natija: `HTTP 201 Created`
 
 ### Product
 
@@ -44,24 +40,7 @@ Mahsulotni olish:
 GET /shop/products/1/
 ```
 
-Natija:
-
-```text
-HTTP 200 OK
-```
-
-Misol:
-
-```json
-{
-  "id": 1,
-  "title": "osh",
-  "category": 3,
-  "category_title": "milliy taomlar",
-  "cost": 25000,
-  "price": 25000
-}
-```
+Natija: `HTTP 200 OK`
 
 ### Customer
 
@@ -71,11 +50,7 @@ Mijoz yaratish:
 POST /shop/customers/
 ```
 
-Natija:
-
-```text
-HTTP 201 Created
-```
+Natija: `HTTP 201 Created`
 
 ### Order
 
@@ -85,11 +60,7 @@ Buyurtma yaratish:
 POST /shop/orders/
 ```
 
-Natija:
-
-```text
-HTTP 201 Created
-```
+Natija: `HTTP 201 Created`
 
 ### Order Product
 
@@ -99,29 +70,12 @@ Buyurtmaga mahsulot qo‘shish:
 POST /shop/order-products/
 ```
 
-Natija:
-
-```text
-HTTP 201 Created
-```
-
-Misol:
-
-```json
-{
-  "id": 24,
-  "count": 1,
-  "price": 30000
-}
-```
+Natija: `HTTP 201 Created`
 
 ### API Documentation
 
-Barcha endpointlarni Swagger orqali ko‘rish va test qilish mumkin:
+Barcha API endpointlarini Swagger orqali ko‘rish va test qilish mumkin:
 
-```text
-http://127.0.0.1:8000/api/docs/
-```
+http://13.48.55.73/api/docs/
 
-Ushbu loyiha davomida asosiy CRUD operatsiyalari va JWT authentication muvaffaqiyatli tekshirildi.
-
+Ushbu loyiha davomida asosiy CRUD operatsiyalari va JWT autentifikatsiyasi tekshirildi.
