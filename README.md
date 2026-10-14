@@ -1,81 +1,92 @@
-## 🔗 Foydali havolalar
+## 🔗 Foydali havolalar## 🔗 Foydali havolalar
 
 | Resurs | Havola |
 |---|---|
-| 📦 GitHub Repository | https://github.com/kavardon90-fayz/MAX-WAY |
-| 📖 Swagger API | http://13.48.55.73/api/docs/ |
-| 📋 OpenAPI Schema | http://13.48.55.73/api/schema/ |
+| 📦 GitHub Repository | [MAX WAY](https://github.com/kavardon90-fayz/MAX-WAY) |
+| 📖 Swagger API Documentation (AWS) | [Swagger](http://13.48.55.73/api/docs/) |
+| 📋 OpenAPI Schema (AWS) | [OpenAPI Schema](http://13.48.55.73/api/schema/) |
+| 🧪 Local Swagger (Docker) | http://127.0.0.1:8000/api/docs/ |
 
-> **Eslatma:** Swagger va OpenAPI hujjatlari AWS serveriga joylashtirilgan va yuqoridagi havolalar orqali ochiladi.
+**Eslatma:** AWS havolalari server ishlayotgan va ulanishga ruxsat berilgan paytda ochiladi. Lokal Swagger esa Docker konteyneri kompyuteringizda ishlayotganida ochiladi.
 
 ## 🧪 API test natijalari
 
-API endpointlari Swagger orqali tekshirildi.
+Asosiy API endpointlari Swagger orqali tekshirildi.
 
 ### JWT Authentication
 
-JWT token olish:
+Token olish:
 
 ```text
 POST /api/token/
 ```
 
-Token olingandan so‘ng ruxsat talab qiladigan endpointlarga murojaat qilish mumkin.
+Natija: `HTTP 200 OK`
 
-### Category
-
-Kategoriya yaratish:
+Refresh token orqali yangi access token olish:
 
 ```text
-POST /shop/categories/
-```
-
-Natija: `HTTP 201 Created`
-
-### Product
-
-Mahsulotni olish:
-
-```text
-GET /shop/products/1/
+POST /api/token/refresh/
 ```
 
 Natija: `HTTP 200 OK`
 
-### Customer
+### Category
 
-Mijoz yaratish:
+Kategoriyalar ro‘yxatini olish:
 
 ```text
-POST /shop/customers/
+GET /shop/categories/
 ```
 
-Natija: `HTTP 201 Created`
+Natija: `HTTP 200 OK`
+
+### Product
+
+Mahsulotlar ro‘yxatini olish:
+
+```text
+GET /shop/products/
+```
+
+Natija: `HTTP 200 OK`
+
+Mahsulot yaratish va rasm yuklash, shuningdek mahsulot narxini `PATCH` orqali yangilash ham tekshirildi.
+
+### Customer
+
+Mijozlar ro‘yxatini olish:
+
+```text
+GET /shop/customers/
+```
+
+Natija: `HTTP 200 OK`
 
 ### Order
 
-Buyurtma yaratish:
+Buyurtmalar ro‘yxatini olish:
 
 ```text
-POST /shop/orders/
+GET /shop/orders/
 ```
 
-Natija: `HTTP 201 Created`
+Natija: `HTTP 200 OK`
 
 ### Order Product
 
-Buyurtmaga mahsulot qo‘shish:
+Buyurtma tarkibidagi mahsulotlar ro‘yxatini olish:
 
 ```text
-POST /shop/order-products/
+GET /shop/order-products/
 ```
 
-Natija: `HTTP 201 Created`
+Natija: `HTTP 200 OK`
 
 ### API Documentation
 
-Barcha API endpointlarini Swagger orqali ko‘rish va test qilish mumkin:
+Barcha endpointlarni ko‘rish va qo‘llab-quvvatlanadigan so‘rovlarni Swagger orqali sinash mumkin:
 
-http://13.48.55.73/api/docs/
+[AWS Swagger Documentation](http://13.48.55.73/api/docs/)
 
-Ushbu loyiha davomida asosiy CRUD operatsiyalari va JWT autentifikatsiyasi tekshirildi.
+Ushbu loyiha Django REST Framework yordamida ishlab chiqilgan. Loyihada CRUD operatsiyalari, JWT autentifikatsiyasi, Docker orqali ishga tushirish va Swagger/OpenAPI hujjatlari bilan ishlash imkoniyatlari mavjud.
