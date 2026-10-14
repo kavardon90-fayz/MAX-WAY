@@ -8,11 +8,15 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
 class ProductSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField()
+
     category_title = serializers.CharField(
         source='category.title',
         read_only=True
     )
+
 
     class Meta:
         model = Product

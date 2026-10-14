@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 
 from rest_framework import viewsets
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 from .models import (
     Product,
@@ -264,6 +265,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
 
 class CustomerViewSet(viewsets.ModelViewSet):

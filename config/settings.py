@@ -147,8 +147,11 @@ REST_FRAMEWORK = {
     ],
 }
 
+
 SPECTACULAR_SETTINGS = {
     'TITLE': 'MAX WAY API',
     'DESCRIPTION': 'MAX WAY ovqat buyurtma qilish tizimi API',
-    'VERSION': '1.0.0',    'SERVE_INCLUDE_SCHEMA': False,
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
 }
