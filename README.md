@@ -1,92 +1,100 @@
-## 🔗 Foydali havolalar## 🔗 Foydali havolalar
+# MAX WAY — Food Delivery API
+
+MAX WAY — oziq-ovqat va taom mahsulotlari, kategoriyalar, mijozlar hamda buyurtmalar bilan ishlash uchun yaratilgan REST API loyihasi.
+
+## Loyiha imkoniyatlari
+
+- Mahsulotlar va kategoriyalarni ko‘rish hamda boshqarish
+- Mijozlar va buyurtmalar bilan ishlash
+- JWT orqali autentifikatsiya
+- Ruxsatlarni boshqarish
+- Mahsulot rasmlarini yuklash
+- Swagger/OpenAPI orqali API hujjatlarini ko‘rish va so‘rovlarni sinash
+- Docker orqali loyihani ishga tushirish
+
+## Texnologiyalar
+
+- Python 3.13
+- Django 6.1
+- Django REST Framework 3.18.1
+- Simple JWT 5.5.1
+- drf-spectacular 0.30.0
+- SQLite
+- Pillow
+- Docker va Docker Compose
+- Swagger/OpenAPI
+- Git va GitHub
+- AWS EC2 va Nginx
+
+## Foydali havolalar
 
 | Resurs | Havola |
 |---|---|
-| 📦 GitHub Repository | [MAX WAY](https://github.com/kavardon90-fayz/MAX-WAY) |
-| 📖 Swagger API Documentation (AWS) | [Swagger](http://13.48.55.73/api/docs/) |
-| 📋 OpenAPI Schema (AWS) | [OpenAPI Schema](http://13.48.55.73/api/schema/) |
-| 🧪 Local Swagger (Docker) | http://127.0.0.1:8000/api/docs/ |
+| GitHub Repository | https://github.com/kavardon90-fayz/MAX-WAY |
+| AWS Swagger | http://13.48.55.73/api/docs/ |
+| AWS OpenAPI Schema | http://13.48.55.73/api/schema/ |
+| Lokal Swagger | http://127.0.0.1:8000/api/docs/ |
 
-**Eslatma:** AWS havolalari server ishlayotgan va ulanishga ruxsat berilgan paytda ochiladi. Lokal Swagger esa Docker konteyneri kompyuteringizda ishlayotganida ochiladi.
+**Eslatma:** AWS manzillari server va tarmoq sozlamalari ishlayotganida ochiladi. Lokal Swagger uchun Docker konteyneri ishga tushirilgan bo‘lishi kerak.
 
-## 🧪 API test natijalari
+## API endpointlari
 
-Asosiy API endpointlari Swagger orqali tekshirildi.
+| Vazifa | Endpoint |
+|---|---|
+| JWT token olish | `POST /api/token/` |
+| Access tokenni yangilash | `POST /api/token/refresh/` |
+| Kategoriyalar | `/shop/categories/` |
+| Mahsulotlar | `/shop/products/` |
+| Mijozlar | `/shop/customers/` |
+| Buyurtmalar | `/shop/orders/` |
+| Buyurtma mahsulotlari | `/shop/order-products/` |
 
-### JWT Authentication
+## Autentifikatsiya va ruxsatlar
 
-Token olish:
+JWT yordamida foydalanuvchi autentifikatsiyasi qo‘llanadi. Mahsulotlar va kategoriyalar uchun o‘qish hamda o‘zgartirish ruxsatlari ajratilgan. Mijozlar, buyurtmalar va buyurtma tarkibi bilan ishlash administrator ruxsatlari bilan cheklanadi.
 
-```text
-POST /api/token/
+## CRUD va testlar
+
+Mahsulotlar hamda kategoriyalar uchun yaratish, ko‘rish, yangilash va o‘chirish amallari Swagger orqali tekshirildi.
+
+Django testlari Docker konteynerida bajarildi:
+
+```powershell
+docker compose exec web python manage.py test shop
 ```
 
-Natija: `HTTP 200 OK`
+Oxirgi tekshiruvda **7 ta test muvaffaqiyatli o‘tdi**.
 
-Refresh token orqali yangi access token olish:
+Django tizim tekshiruvi:
 
-```text
-POST /api/token/refresh/
+```powershell
+docker compose exec web python manage.py check
 ```
 
-Natija: `HTTP 200 OK`
+Natija: `System check identified no issues (0 silenced).`
 
-### Category
+## Docker orqali ishga tushirish
 
-Kategoriyalar ro‘yxatini olish:
+Loyiha papkasida Docker Desktop ishga tushirilgan bo‘lishi kerak.
 
-```text
-GET /shop/categories/
+Konteynerlarni ishga tushirish:
+
+```powershell
+docker compose up -d --build
 ```
 
-Natija: `HTTP 200 OK`
+Konteynerlar holatini tekshirish:
 
-### Product
-
-Mahsulotlar ro‘yxatini olish:
-
-```text
-GET /shop/products/
+```powershell
+docker compose ps
 ```
 
-Natija: `HTTP 200 OK`
+Lokal Swagger manzili:
 
-Mahsulot yaratish va rasm yuklash, shuningdek mahsulot narxini `PATCH` orqali yangilash ham tekshirildi.
+http://127.0.0.1:8000/api/docs/
 
-### Customer
+## Loyiha muallifi
 
-Mijozlar ro‘yxatini olish:
+Bahrom Normatov
 
-```text
-GET /shop/customers/
-```
-
-Natija: `HTTP 200 OK`
-
-### Order
-
-Buyurtmalar ro‘yxatini olish:
-
-```text
-GET /shop/orders/
-```
-
-Natija: `HTTP 200 OK`
-
-### Order Product
-
-Buyurtma tarkibidagi mahsulotlar ro‘yxatini olish:
-
-```text
-GET /shop/order-products/
-```
-
-Natija: `HTTP 200 OK`
-
-### API Documentation
-
-Barcha endpointlarni ko‘rish va qo‘llab-quvvatlanadigan so‘rovlarni Swagger orqali sinash mumkin:
-
-[AWS Swagger Documentation](http://13.48.55.73/api/docs/)
-
-Ushbu loyiha Django REST Framework yordamida ishlab chiqilgan. Loyihada CRUD operatsiyalari, JWT autentifikatsiyasi, Docker orqali ishga tushirish va Swagger/OpenAPI hujjatlari bilan ishlash imkoniyatlari mavjud.
+Ushbu loyiha Django REST Framework, JWT autentifikatsiyasi, Docker va AWS EC2 yordamida REST API yaratish ko‘nikmalarini namoyish etish uchun tayyorlangan.
