@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 
 from rest_framework import viewsets
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.permissions import IsAdminUser
+from .permissions import IsAdminOrReadOnly
 
 from .models import (
     Product,
@@ -258,26 +260,31 @@ def order_page(request):
 # ==========================================
 
 class CategoryViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAdminOrReadOnly]
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
 class ProductViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAdminOrReadOnly]
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAdminUser]
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
 
 
 class OrderViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAdminUser]
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
 
 
 class OrderProductViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAdminUser]
     queryset = OrderProduct.objects.all()
     serializer_class = OrderProductSerializer
