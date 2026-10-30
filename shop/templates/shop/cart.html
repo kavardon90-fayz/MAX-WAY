@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
@@ -167,7 +167,7 @@
                font-size: 18px;
                font-weight: bold;
            ">
-            📦 Buyurtma berish
+            рџ“¦ Buyurtma berish
         </a>
 
     </div>
@@ -189,7 +189,7 @@
                font-size: 18px;
                font-weight: bold;
            ">
-            📦 Buyurtma berish
+            рџ“¦ Buyurtma berish
         </a>
 
     </div>
@@ -273,18 +273,35 @@
                 font-size: 20px;
             }
         }
+        .back-button {
+    display: inline-block;
+    margin: 10px 0 20px;
+    padding: 10px 16px;
+    background-color: #f0f0f0;
+    color: #333;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+.back-button:hover {
+    background-color: #ddd;
+}
     </style>
 </head>
 
 <body>
 
 <header>
-    <h2>MAX WAY 🛒 Savat</h2>
+    <h2>MAX WAY рџ›’ Savat</h2>
 </header>
 
 <div class="container">
 
     <h1>Savat</h1>
+<a href="{% url 'home' %}" class="back-button">
+    в†ђ Mahsulotlarga qaytish
+</a>
 
     {% for item in cart_items %}
 
@@ -308,24 +325,24 @@
                     <!-- MIQDOR -->
                     <div class="quantity">
 
-                        <a href="{% url 'decrease_cart' item.product.id %}"
-                           class="quantity-button">
-                            −
-                        </a>
+                        <form method="post" action="{% url 'decrease_cart' item.product.id %}">
+    {% csrf_token %}
+    <button type="submit" class="quantity-button">в€’</button>
+</form>
 
                         <span class="quantity-number">
                             {{ item.quantity }}
                         </span>
 
-                        <a href="{% url 'increase_cart' item.product.id %}"
-                           class="quantity-button">
-                            +
-                        </a>
+                      <form method="post" action="{% url 'increase_cart' item.product.id %}">
+    {% csrf_token %}
+    <button type="submit" class="quantity-button">+</button>
+</form>
 
                     </div>
 
                     <p>
-                        {{ item.product.price }} so'm × {{ item.quantity }}
+                        {{ item.product.price }} so'm Г— {{ item.quantity }}
                     </p>
 
                 </div>
@@ -339,19 +356,20 @@
                     {{ item.total }} so'm
                 </span>
 
-                <a href="{% url 'remove_from_cart' item.product.id %}"
-                   class="remove-button">
-                    🗑 O‘chirish
-                </a>
-
+                <form method="post"
+      action="{% url 'remove_from_cart' item.product.id %}">
+    {% csrf_token %}
+    <button type="submit" class="remove-button">
+        OвЂchirish
+    </button>
+</form>
             </div>
 
         </div>
-
     {% empty %}
 
         <div class="empty">
-            Savat hozircha bo‘sh.
+            Savat hozircha boвЂsh.
         </div>
 
     {% endfor %}
@@ -385,7 +403,7 @@
                font-size: 18px;
                font-weight: bold;
            ">
-            📦 Buyurtma berish
+            рџ“¦ Buyurtma berish
         </a>
 
     </div>

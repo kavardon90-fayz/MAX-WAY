@@ -331,12 +331,14 @@
                 </label>
 
                 <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    placeholder="+998 90 123 45 67"
-                    required
-                >
+    type="tel"
+    id="phone"
+    name="phone"
+    placeholder="+998 90 123 45 67"
+    pattern="(\+998[ -]?)?[0-9]{2}[ -]?[0-9]{3}[ -]?[0-9]{2}[ -]?[0-9]{2}"
+    title="Telefon raqamini +998 90 123 45 67 shaklida kiriting"
+    required
+>
 
             </div>
 
@@ -519,12 +521,13 @@
 
             <!-- BUYURTMA -->
 
-            <button
-                class="order-button"
-                type="submit"
-            >
-                📦 Buyurtmani tasdiqlash
-            </button>
+<button
+    id="order-submit-button"
+    class="order-button"
+    type="submit"
+>
+    📦 Buyurtmani tasdiqlash
+</button>
 
         </form>
 
@@ -664,6 +667,24 @@ function getLocation() {
 }
 
 </script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form");
+    const button = document.getElementById("order-submit-button");
+
+    if (!form || !button) {
+        return;
+    }
+
+    form.addEventListener("submit", function (event) {
+        if (button.disabled) {
+            event.preventDefault();
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = "Buyurtma yuborilmoqda...";
+    });
+});
 
 </body>
 </html>

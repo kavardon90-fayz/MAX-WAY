@@ -1,3 +1,4 @@
+
 services:
   web:
     build: .
@@ -7,5 +8,6 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
-    command: python manage.py runserver 0.0.0.0:8000
+      - ./db.sqlite3:/app/db.sqlite3
+      - ./media:/app/media
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3

@@ -5,4 +5,19 @@ __pycache__/
 db.sqlite3
 .env
 media/
+# Environment files
+.env.*
+!.env.example
 
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Python test and coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Local database backups
+*.sqlite3.backup

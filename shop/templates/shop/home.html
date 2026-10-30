@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
@@ -115,7 +115,7 @@
     <div class="logo">MAX WAY</div>
 
     <a href="{% url 'cart' %}" class="cart">
-    🛒 Savat
+    рџ›’ Savat
 </a>
 </header>
 
@@ -147,9 +147,12 @@
                     {{ product.price }} so'm
                 </div>
 
-               <a href="{% url 'add_to_cart' product.id %}" class="button">
-    🛒 Savatga qo‘shish
-</a>
+               <form method="post" action="{% url 'add_to_cart' product.id %}">
+    {% csrf_token %}
+    <button type="submit" class="button">
+        Savatga qo‘shish
+    </button>
+</form>
 
             </div>
 

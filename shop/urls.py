@@ -13,7 +13,7 @@ from .views import (
     ProductViewSet,
     CustomerViewSet,
     OrderViewSet,
-    OrderProductViewSet,
+    OrderProductViewSet
 )
 
 
