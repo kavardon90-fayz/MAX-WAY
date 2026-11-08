@@ -31,8 +31,8 @@ MAX WAY — oziq-ovqat va taom mahsulotlari, kategoriyalar, mijozlar hamda buyur
 | Resurs | Havola |
 |---|---|
 | GitHub Repository | https://github.com/kavardon90-fayz/MAX-WAY |
-| AWS Swagger | http://13.48.55.73/api/docs/ |
-| AWS OpenAPI Schema | http://13.48.55.73/api/schema/ |
+| AWS Swagger | https://maxway-api.duckdns.org/api/docs/ |
+| AWS OpenAPI Schema | https://maxway-api.duckdns.org/api/schema/ |
 | Lokal Swagger | http://127.0.0.1:8000/api/docs/ |
 
 **Eslatma:** AWS manzillari server va tarmoq sozlamalari ishlayotganida ochiladi. Lokal Swagger uchun Docker konteyneri ishga tushirilgan bo‘lishi kerak.
@@ -51,7 +51,7 @@ MAX WAY — oziq-ovqat va taom mahsulotlari, kategoriyalar, mijozlar hamda buyur
 
 ## Autentifikatsiya va ruxsatlar
 
-JWT yordamida foydalanuvchi autentifikatsiyasi qo‘llanadi. Mahsulotlar va kategoriyalar uchun o‘qish hamda o‘zgartirish ruxsatlari ajratilgan. Mijozlar, buyurtmalar va buyurtma tarkibi bilan ishlash administrator ruxsatlari bilan cheklanadi.
+JWT autentifikatsiyasi ishlatiladi. Mahsulotlar va kategoriyalarni barcha foydalanuvchilar ko‘rishi mumkin. Ularni yaratish, tahrirlash va o‘chirish faqat administratorga ruxsat etiladi. Oddiy foydalanuvchi faqat o‘z mijoz profili va buyurtmalarini ko‘radi. Administrator barcha mijozlar va buyurtmalarni boshqarishi mumkin. Buyurtma tarkibiga kirish ham foydalanuvchining o‘z buyurtmalari bilan cheklanadi.
 
 ## CRUD va testlar
 
@@ -60,10 +60,10 @@ Mahsulotlar hamda kategoriyalar uchun yaratish, ko‘rish, yangilash va o‘chir
 Django testlari Docker konteynerida bajarildi:
 
 ```powershell
-docker compose exec web python manage.py test shop
+docker compose exec web python manage.py test
 ```
 
-Oxirgi tekshiruvda **7 ta test muvaffaqiyatli o‘tdi**.
+Oxirgi tekshiruvda **73 ta test muvaffaqiyatli o'tdi**.
 
 Django tizim tekshiruvi:
 

@@ -118,8 +118,16 @@ class OrderProductSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        request = self.context.get("request")
+
+        if request and request.user.is_authenticated:
+            if not request.user.is_staff:
+                self.fields["order"].queryset = Order.objects.filter(
+                    customer__user=request.user
+                )
+
         if self.instance is not None:
-            self.fields['order'].read_only = True
+            self.fields["order"].read_only = True
 
     class Meta:
         model = OrderProduct

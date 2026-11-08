@@ -1,4 +1,5 @@
-﻿import re
+﻿import math
+import re
 import uuid
 from django.views.decorators.http import require_POST
 from django.shortcuts import render, redirect
@@ -194,7 +195,6 @@ def order_page(request):
             valid_cart[product_id] = quantity
 
     cart_data = valid_cart
-    request.session['cart'] = cart_data
 
     products = list(
         Product.objects.filter(id__in=cart_data.keys())
@@ -208,15 +208,11 @@ def order_page(request):
         if product_id in valid_ids
     }
 
-    request.session['cart'] = cart_data
-
     cart_items = []
     grand_total = 0
 
     for product in products:
-
         quantity = cart_data[str(product.id)]
-
         total = product.price * quantity
 
         cart_items.append({
@@ -241,52 +237,78 @@ def order_page(request):
 
         if Order.objects.filter(checkout_token=submitted_token).exists():
             request.session['checkout_token'] = str(uuid.uuid4())
+            request.session.modified = True
             return redirect('home')
 
         if not cart_items:
             return redirect('cart')
 
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
         phone = request.POST.get('phone', '').strip()
         address = request.POST.get('address', '').strip()
 
-        # OвЂzbekiston telefon raqamini tekshirish
+        # ==========================================
+        # TELEFON RAQAMINI TEKSHIRISH
+        # ==========================================
+
         phone_digits = re.sub(r'\D', '', phone)
 
         if not re.fullmatch(r'(?:998)?\d{9}', phone_digits):
             return redirect('order_page')
 
-        # Telefonni yagona formatga keltirish
         if len(phone_digits) == 12 and phone_digits.startswith('998'):
             phone_digits = phone_digits[3:]
 
         phone = '+998' + phone_digits
 
+        # ==========================================
+        # MAJBURIY MAYDONLARNI TEKSHIRISH
+        # ==========================================
+
         if not all([
-            first_name and first_name.strip(),
-            last_name and last_name.strip(),
-            phone and phone.strip(),
-            address and address.strip(),
+            first_name,
+            last_name,
+            phone,
+            address,
         ]):
             return redirect('order_page')
 
         payment_type = request.POST.get('payment_type')
         delivery_type = request.POST.get('delivery_type')
 
-
-        if payment_type not in ('1', '2') or delivery_type not in ('1', '2'):
+        if payment_type not in ('1', '2'):
             return redirect('order_page')
 
-        latitude = request.POST.get('latitude')
-        longitude = request.POST.get('longitude')
+        if delivery_type not in ('1', '2'):
+            return redirect('order_page')
+
+        # ==========================================
+        # KOORDINATALARNI TEKSHIRISH
+        # ==========================================
+
+        latitude_raw = request.POST.get('latitude', '').strip()
+        longitude_raw = request.POST.get('longitude', '').strip()
+
+        # Ikkala koordinata birgalikda yuborilishi kerak.
+        # Ikkalasi bo'sh bo'lsa, manzil orqali buyurtma qabul qilinadi.
+        if bool(latitude_raw) != bool(longitude_raw):
+            return redirect('order_page')
 
         try:
-            latitude = float(latitude) if latitude else None
-            longitude = float(longitude) if longitude else None
+            latitude = float(latitude_raw) if latitude_raw else None
+            longitude = float(longitude_raw) if longitude_raw else None
         except (ValueError, TypeError):
             return redirect('order_page')
 
+        # NaN va Infinity qiymatlarini rad etish.
+        if latitude is not None and not math.isfinite(latitude):
+            return redirect('order_page')
+
+        if longitude is not None and not math.isfinite(longitude):
+            return redirect('order_page')
+
+        # Geografik chegaralarni tekshirish.
         if latitude is not None and not -90 <= latitude <= 90:
             return redirect('order_page')
 
@@ -294,13 +316,12 @@ def order_page(request):
             return redirect('order_page')
 
         # ==========================================
-
+        # BUYURTMA VA MAHSULOTLARNI SAQLASH
         # ==========================================
-
-
 
         try:
             with transaction.atomic():
+
                 existing_customer = Customer.objects.filter(
                     phone_number=phone
                 ).first()
@@ -308,10 +329,11 @@ def order_page(request):
                 if existing_customer is None:
                     customer = Customer.objects.create(
                         phone_number=phone,
-                        first_name=first_name.strip(),
-                        last_name=last_name.strip(),
+                        first_name=first_name,
+                        last_name=last_name,
                     )
                 else:
+                    # Mavjud mijoz ma'lumotlarini o'zgartirmaymiz.
                     customer = None
 
                 order = Order.objects.create(
@@ -321,14 +343,15 @@ def order_page(request):
                     latitude=latitude,
                     longitude=longitude,
                     customer=customer,
-                    guest_first_name=first_name.strip(),
-                    guest_last_name=last_name.strip(),
+                    guest_first_name=first_name,
+                    guest_last_name=last_name,
                     guest_phone=phone,
                     checkout_token=submitted_token,
                 )
 
                 for product in products:
                     quantity = cart_data[str(product.id)]
+
                     OrderProduct.objects.create(
                         count=quantity,
                         price=product.price,
@@ -338,6 +361,8 @@ def order_page(request):
                     )
 
         except IntegrityError:
+            # Bir xil token bilan parallel buyurtma kelgan bo'lsa,
+            # takroriy buyurtmani yaratmaymiz.
             if Order.objects.filter(
                 checkout_token=submitted_token
             ).exists():
@@ -345,11 +370,18 @@ def order_page(request):
                 request.session['checkout_token'] = str(uuid.uuid4())
                 request.session.modified = True
                 return redirect('home')
+
+            # Boshqa ma'lumotlar bazasi xatosini yashirmaymiz.
             raise
+
+        # ==========================================
+        # MUVAFFAQIYATLI BUYURTMADAN KEYIN
+        # ==========================================
 
         request.session['cart'] = {}
         request.session['checkout_token'] = str(uuid.uuid4())
         request.session.modified = True
+
         return redirect('home')
 
     # ==========================================
@@ -424,15 +456,10 @@ class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = OrderSerializer
     queryset = Order.objects.all()
-    def get_permissions(self):
-        if self.action in [
-            "create",
-            "update",
-            "partial_update",
-            "destroy",
-        ]:
-            return [IsAdminUser()]
 
+    def get_permissions(self):
+        if self.action in ["update", "partial_update", "destroy"]:
+            return [IsAdminUser()]
         return [IsAuthenticated()]
 
     def get_queryset(self):
@@ -460,42 +487,42 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         serializer.save(customer=customer)
 
+
 class OrderProductViewSet(viewsets.ModelViewSet):
     serializer_class = OrderProductSerializer
     queryset = OrderProduct.objects.all()
+
     def get_permissions(self):
-        if self.action in ["list", "retrieve"]:
+        if self.action in ["list", "retrieve", "create"]:
             return [IsAuthenticated()]
         return [IsAdminUser()]
 
     def get_queryset(self):
         user = self.request.user
+
         if user.is_staff:
             return OrderProduct.objects.all()
-        return OrderProduct.objects.filter(order__customer__user=user)
+
+        return OrderProduct.objects.filter(
+            order__customer__user=user
+        )
 
     def perform_create(self, serializer):
-        from rest_framework.exceptions import ValidationError
-
-        product = serializer.validated_data.get("product")
-        if product is None:
-            raise ValidationError({
-                "product": "Mahsulot tanlanishi shart."
-            })
+        product = serializer.validated_data["product"]
 
         serializer.save(
             price=product.price,
             product_title=product.title,
         )
-    def perform_update(self, serializer):
-        from rest_framework.exceptions import ValidationError
 
+    def perform_update(self, serializer):
         product = serializer.validated_data.get(
             "product",
             serializer.instance.product,
         )
 
         if product is None:
+            from rest_framework.exceptions import ValidationError
             raise ValidationError({
                 "product": "Mahsulot tanlanishi shart."
             })

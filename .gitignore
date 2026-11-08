@@ -21,3 +21,23 @@ htmlcov/
 
 # Local database backups
 *.sqlite3.backup
+
+# Project review backups and temporary schema files
+backup_before_api_review_*/
+README_backup.md
+aws-schema.yaml
+schema-before-pagination.yml
+schema-current-check.yml
+
+# Temporary validation output and local test backups
+openapi-check.txt
+shop/tests_before_checkout_hardening.py
+
+staticfiles/
+
+# Local review and temporary files
+README_before_encoding_fix.md
+README_original_from_git.md
+review_backups/
+schema-check.yaml
+schema-check.yml

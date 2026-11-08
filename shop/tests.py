@@ -1,5 +1,7 @@
 ﻿from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import Client
 from django.db import IntegrityError, transaction
+from unittest.mock import patch
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from rest_framework import status
@@ -68,6 +70,62 @@ class APIPermissionsTests(APITestCase):
             price=1000,
             product_title="Other user's product",
         )
+    def test_anonymous_user_cannot_access_private_endpoints(self):
+        endpoints = [
+            "/shop/customers/",
+            "/shop/orders/",
+            "/shop/order-products/",
+        ]
+
+        for endpoint in endpoints:
+            with self.subTest(endpoint=endpoint):
+                response = self.client.get(endpoint)
+                self.assertEqual(
+                    response.status_code,
+                    status.HTTP_401_UNAUTHORIZED,
+                )
+
+    def test_admin_can_read_all_customers(self):
+        self.client.force_authenticate(user=self.admin)
+
+        response = self.client.get("/shop/customers/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        customer_ids = {
+            item["id"] for item in response.data["results"]
+        }
+
+        self.assertIn(self.customer.id, customer_ids)
+        self.assertIn(self.other_customer.id, customer_ids)
+
+    def test_admin_can_read_all_orders(self):
+        self.client.force_authenticate(user=self.admin)
+
+        response = self.client.get("/shop/orders/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        order_ids = {
+            item["id"] for item in response.data["results"]
+        }
+
+        self.assertIn(self.order.id, order_ids)
+        self.assertIn(self.other_order.id, order_ids)
+
+    def test_admin_can_read_all_order_products(self):
+        self.client.force_authenticate(user=self.admin)
+
+        response = self.client.get("/shop/order-products/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        order_product_ids = {
+            item["id"] for item in response.data["results"]
+        }
+
+        self.assertIn(self.order_product.id, order_product_ids)
+        self.assertIn(self.other_order_product.id, order_product_ids)
 
     def test_anonymous_user_can_read_products(self):
         response = self.client.get("/shop/products/")
@@ -110,15 +168,27 @@ class APIPermissionsTests(APITestCase):
             )
             self.assertNotIn("cost", product_data)
 
-    def test_regular_user_cannot_see_product_cost(self):
-        request = APIRequestFactory().get("/shop/products/")
-        request.user = self.user
+    def test_regular_user_can_create_own_order(self):
+        self.client.force_authenticate(user=self.user)
 
-        serializer = ProductSerializer(
-            context={"request": request}
+        response = self.client.post(
+            "/shop/orders/",
+            {
+                "payment_type": 1,
+                "delivery_type": 1,
+                "address": "My new test address",
+            },
+            format="json",
         )
 
-        self.assertNotIn("cost", serializer.fields)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+            getattr(response, "data", response.content),
+        )
+
+        created_order = Order.objects.get(id=response.data["id"])
+        self.assertEqual(created_order.customer_id, self.customer.id)
 
     def test_admin_can_see_product_cost(self):
         request = APIRequestFactory().get("/shop/products/")
@@ -161,6 +231,70 @@ class APIPermissionsTests(APITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def create_test_product(self):
+        return Product.objects.create(
+            title="Permission test product",
+            description="Test description",
+            category=self.category,
+            cost=10000,
+            price=20000,
+            image=SimpleUploadedFile(
+                "permission-test.jpg",
+                b"test-image-content",
+                content_type="image/jpeg",
+            ),
+        )
+
+    def test_regular_user_cannot_update_product(self):
+        product = self.create_test_product()
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            f"/shop/products/{product.id}/",
+            {"title": "Unauthorized update"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        product.refresh_from_db()
+        self.assertEqual(product.title, "Permission test product")
+
+    def test_regular_user_cannot_change_product_cost(self):
+        product = self.create_test_product()
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            f"/shop/products/{product.id}/",
+            {"cost": 1},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        product.refresh_from_db()
+        self.assertEqual(product.cost, 10000)
+
+    def test_regular_user_cannot_delete_product(self):
+        product = self.create_test_product()
+        self.client.force_authenticate(user=self.user)
+        response = self.client.delete(f"/shop/products/{product.id}/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(Product.objects.filter(id=product.id).exists())
+
+    def test_regular_user_cannot_update_category(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            f"/shop/categories/{self.category.id}/",
+            {"title": "Unauthorized category update"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.category.refresh_from_db()
+        self.assertEqual(self.category.title, "Test category")
+
+    def test_regular_user_cannot_delete_category(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.delete(
+            f"/shop/categories/{self.category.id}/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(Category.objects.filter(id=self.category.id).exists())
 
     def test_admin_order_product_uses_server_product_price_and_title(self):
         self.client.force_authenticate(user=self.admin)
@@ -321,10 +455,6 @@ class APIPermissionsTests(APITestCase):
         response = self.client.get("/shop/orders/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_regular_user_cannot_create_order(self):
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post("/shop/orders/", {}, format="json")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
     def test_order_customer_is_read_only(self):
         self.client.force_authenticate(user=self.admin)
 
@@ -497,15 +627,83 @@ class APIPermissionsTests(APITestCase):
             response.status_code,
             status.HTTP_400_BAD_REQUEST,
         )
-    def test_regular_user_cannot_create_order_product(self):
+
+    def test_regular_user_can_add_product_to_own_order(self):
         self.client.force_authenticate(user=self.user)
+
+        product = Product.objects.create(
+            title="API test product",
+            description="Test description",
+            category=self.category,
+            cost=10000,
+            price=25000,
+            image=SimpleUploadedFile(
+                "api-test.jpg",
+                b"test-image-content",
+                content_type="image/jpeg",
+            ),
+        )
+
         response = self.client.post(
             "/shop/order-products/",
-            {},
+            {
+                "count": 2,
+                "product": product.id,
+                "order": self.order.id,
+            },
             format="json",
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+            getattr(response, "data", response.content),
+        )
+
+        item = OrderProduct.objects.get(id=response.data["id"])
+        self.assertEqual(item.order_id, self.order.id)
+        self.assertEqual(item.price, product.price)
+        self.assertEqual(item.product_title, product.title)
+        self.assertEqual(item.count, 2)
+
+    def test_regular_user_cannot_add_product_to_another_order(self):
+        self.client.force_authenticate(user=self.user)
+
+        product = Product.objects.create(
+            title="Foreign order test product",
+            description="Test description",
+            category=self.category,
+            cost=10000,
+            price=25000,
+            image=SimpleUploadedFile(
+                "foreign-test.jpg",
+                b"test-image-content",
+                content_type="image/jpeg",
+            ),
+        )
+
+        response = self.client.post(
+            "/shop/order-products/",
+            {
+                "count": 1,
+                "product": product.id,
+                "order": self.other_order.id,
+            },
+            format="json",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+            getattr(response, "data", response.content),
+        )
+
+        self.assertFalse(
+            OrderProduct.objects.filter(
+                order=self.other_order,
+                product=product,
+            ).exists()
+        )
     def test_regular_user_cannot_update_order_product(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.patch(
@@ -606,6 +804,71 @@ class APIPermissionsTests(APITestCase):
                     count=1,
                     price=-1,
                     product_title="Invalid negative price",
+                )
+
+
+    def test_database_rejects_zero_product_cost(self):
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                Product.objects.create(
+                    title="Invalid zero cost",
+                    description="Test",
+                    cost=0,
+                    price=100,
+                    image=SimpleUploadedFile("test.jpg", b"test"),
+                )
+
+    def test_database_rejects_negative_product_cost(self):
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                Product.objects.create(
+                    title="Invalid negative cost",
+                    description="Test",
+                    cost=-1,
+                    price=100,
+                    image=SimpleUploadedFile("test.jpg", b"test"),
+                )
+
+    def test_database_rejects_zero_product_price(self):
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                Product.objects.create(
+                    title="Invalid zero price",
+                    description="Test",
+                    cost=100,
+                    price=0,
+                    image=SimpleUploadedFile("test.jpg", b"test"),
+                )
+
+    def test_database_rejects_negative_product_price(self):
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                Product.objects.create(
+                    title="Invalid negative price",
+                    description="Test",
+                    cost=100,
+                    price=-1,
+                    image=SimpleUploadedFile("test.jpg", b"test"),
+                )
+
+    def test_database_rejects_zero_order_product_count(self):
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                OrderProduct.objects.create(
+                    order=self.order,
+                    count=0,
+                    price=100,
+                    product_title="Invalid zero count",
+                )
+
+    def test_database_rejects_negative_order_product_count(self):
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                OrderProduct.objects.create(
+                    order=self.order,
+                    count=-1,
+                    price=100,
+                    product_title="Invalid negative count",
                 )
 class CheckoutTests(APITestCase):
     def test_empty_cart_does_not_create_order(self):
@@ -814,6 +1077,10 @@ class CheckoutTests(APITestCase):
         self.assertEqual(item.price, product.price)
         order_products_before = OrderProduct.objects.count()
 
+        session = self.client.session
+        session["checkout_token"] = token
+        session.save()
+
         duplicate_response = self.client.post(
             "/shop/order/",
             {
@@ -836,6 +1103,134 @@ class CheckoutTests(APITestCase):
             OrderProduct.objects.count(),
             order_products_before,
         )
+
+    def test_checkout_rolls_back_if_order_product_creation_fails(self):
+        product = Product.objects.create(
+            title="Rollback test product",
+            description="Test description",
+            cost=10000,
+            price=15000,
+            image=SimpleUploadedFile(
+                "rollback-test.jpg",
+                b"test-image-content",
+                content_type="image/jpeg",
+            ),
+        )
+
+        self.client.get("/shop/order/")
+        session = self.client.session
+        session["cart"] = {str(product.id): 1}
+        session.save()
+
+        self.client.get("/shop/order/")
+        token = self.client.session.get("checkout_token")
+
+        orders_before = Order.objects.count()
+        customers_before = Customer.objects.count()
+        items_before = OrderProduct.objects.count()
+
+        with patch(
+            "shop.views.OrderProduct.objects.create",
+            side_effect=IntegrityError("Simulated database error"),
+        ):
+            with self.assertRaises(IntegrityError):
+                self.client.post(
+                    "/shop/order/",
+                    {
+                        "checkout_token": token,
+                        "first_name": "Rollback",
+                        "last_name": "Tester",
+                        "phone": "901234567",
+                        "address": "Test address",
+                        "payment_type": "1",
+                        "delivery_type": "1",
+                    },
+                )
+
+        self.assertEqual(Order.objects.count(), orders_before)
+        self.assertEqual(Customer.objects.count(), customers_before)
+        self.assertEqual(OrderProduct.objects.count(), items_before)
+        self.assertEqual(
+            self.client.session["cart"],
+            {str(product.id): 1},
+        )
+
+    def _assert_invalid_checkout_rejected(self, extra_data):
+        product = Product.objects.create(
+            title="Checkout validation test product",
+            description="Test description",
+            cost=10000,
+            price=15000,
+            image=SimpleUploadedFile(
+                "test.jpg",
+                b"fake-image-content",
+                content_type="image/jpeg",
+            ),
+        )
+
+        self.client.get("/shop/order/")
+
+        session = self.client.session
+        session["cart"] = {str(product.id): 1}
+        session.save()
+
+        self.client.get("/shop/order/")
+        token = self.client.session.get("checkout_token")
+
+        orders_before = Order.objects.count()
+        customers_before = Customer.objects.count()
+        items_before = OrderProduct.objects.count()
+
+        data = {
+            "checkout_token": token,
+            "first_name": "Validation",
+            "last_name": "Tester",
+            "phone": "901234567",
+            "address": "Test address",
+            "payment_type": "1",
+            "delivery_type": "1",
+        }
+        data.update(extra_data)
+
+        response = self.client.post("/shop/order/", data)
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(Order.objects.count(), orders_before)
+        self.assertEqual(Customer.objects.count(), customers_before)
+        self.assertEqual(OrderProduct.objects.count(), items_before)
+
+    def test_invalid_delivery_type_does_not_create_order(self):
+        self._assert_invalid_checkout_rejected({"delivery_type": "999"})
+
+    def test_nan_latitude_does_not_create_order(self):
+        self._assert_invalid_checkout_rejected({
+            "latitude": "NaN",
+            "longitude": "41.311",
+        })
+
+    def test_infinite_longitude_does_not_create_order(self):
+        self._assert_invalid_checkout_rejected({
+            "latitude": "41.311",
+            "longitude": "Infinity",
+        })
+
+    def test_out_of_range_latitude_does_not_create_order(self):
+        self._assert_invalid_checkout_rejected({
+            "latitude": "91",
+            "longitude": "41.311",
+        })
+
+    def test_out_of_range_longitude_does_not_create_order(self):
+        self._assert_invalid_checkout_rejected({
+            "latitude": "41.311",
+            "longitude": "181",
+        })
+
+    def test_partial_coordinates_do_not_create_order(self):
+        self._assert_invalid_checkout_rejected({
+            "latitude": "41.311",
+            "longitude": "",
+        })
 class CartMethodSecurityTests(APITestCase):
 
     def setUp(self):
@@ -875,41 +1270,146 @@ class CartMethodSecurityTests(APITestCase):
         )
         self.assertEqual(response.status_code, 405)
 
-        class CartMethodSecurityTests(APITestCase):
+    def test_cart_post_actions_reject_missing_csrf_token(self):
+        client = Client(enforce_csrf_checks=True)
 
-            def setUp(self):
-                self.product = Product.objects.create(
-                    title="Cart security test",
-                    description="Test product",
-                    cost=10000,
-                    price=15000,
-                    image=SimpleUploadedFile(
-                        "cart-test.jpg",
-                        b"test-image-content",
-                        content_type="image/jpeg",
-                    ),
+        paths = [
+            f"/shop/add-to-cart/{self.product.id}/",
+            f"/shop/cart/increase/{self.product.id}/",
+            f"/shop/cart/decrease/{self.product.id}/",
+            f"/shop/cart/remove/{self.product.id}/",
+        ]
+
+        for path in paths:
+            with self.subTest(path=path):
+                response = client.post(path)
+                self.assertEqual(response.status_code, 403)
+
+    def test_add_to_cart_accepts_valid_csrf_token(self):
+        client = Client(enforce_csrf_checks=True)
+
+        get_response = client.get("/shop/")
+        self.assertEqual(get_response.status_code, 200)
+        self.assertIn("csrftoken", client.cookies)
+
+        csrf_token = client.cookies["csrftoken"].value
+
+        response = client.post(
+            f"/shop/add-to-cart/{self.product.id}/",
+            HTTP_X_CSRFTOKEN=csrf_token,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            client.session["cart"][str(self.product.id)],
+            1,
+        )
+class PaginationTests(APITestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        User = get_user_model()
+
+        cls.admin = User.objects.create_superuser(
+            username="pagination_admin",
+            email="pagination@example.com",
+            password="Test-password-123",
+        )
+
+        cls.category = Category.objects.create(
+            title="Pagination category"
+        )
+
+        cls.product = Product.objects.create(
+            title="Pagination product",
+            description="Test product",
+            category=cls.category,
+            cost=10000,
+            price=15000,
+            image=SimpleUploadedFile(
+                "pagination-test.jpg",
+                b"test-image-content",
+                content_type="image/jpeg",
+            ),
+        )
+
+        cls.customer = Customer.objects.create(
+            user=cls.admin,
+            first_name="Pagination",
+            last_name="Test",
+            phone_number="998901234567",
+        )
+
+        cls.order = Order.objects.create(
+            customer=cls.customer,
+            payment_type=1,
+            delivery_type=1,
+            address="Pagination test address",
+        )
+
+        cls.order_product = OrderProduct.objects.create(
+            order=cls.order,
+            count=1,
+            price=15000,
+            product_title="Pagination product",
+        )
+
+        for number in range(20):
+            Category.objects.create(
+                title=f"Pagination category {number}"
+            )
+
+    def test_all_api_list_endpoints_are_paginated(self):
+        self.client.force_authenticate(user=self.admin)
+
+        endpoints = [
+            "/shop/categories/",
+            "/shop/products/",
+            "/shop/customers/",
+            "/shop/orders/",
+            "/shop/order-products/",
+        ]
+
+        for endpoint in endpoints:
+            with self.subTest(endpoint=endpoint):
+                response = self.client.get(endpoint)
+
+                self.assertEqual(
+                    response.status_code,
+                    status.HTTP_200_OK,
                 )
 
-            def test_add_to_cart_rejects_get(self):
-                response = self.client.get(
-                    f"/shop/add-to-cart/{self.product.id}/"
-                )
-                self.assertEqual(response.status_code, 405)
+                self.assertIn("count", response.data)
+                self.assertIn("next", response.data)
+                self.assertIn("previous", response.data)
+                self.assertIn("results", response.data)
 
-            def test_increase_cart_rejects_get(self):
-                response = self.client.get(
-                    f"/shop/cart/increase/{self.product.id}/"
+                self.assertIsInstance(
+                    response.data["results"],
+                    list,
                 )
-                self.assertEqual(response.status_code, 405)
 
-            def test_decrease_cart_rejects_get(self):
-                response = self.client.get(
-                    f"/shop/cart/decrease/{self.product.id}/"
+                self.assertLessEqual(
+                    len(response.data["results"]),
+                    20,
                 )
-                self.assertEqual(response.status_code, 405)
 
-            def test_remove_from_cart_rejects_get(self):
-                response = self.client.get(
-                    f"/shop/cart/remove/{self.product.id}/"
-                )
-                self.assertEqual(response.status_code, 405)
+    def test_second_page_returns_remaining_categories(self):
+        response = self.client.get("/shop/categories/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 21)
+        self.assertEqual(len(response.data["results"]), 20)
+        self.assertIsNotNone(response.data["next"])
+        self.assertIsNone(response.data["previous"])
+
+        second_page = self.client.get("/shop/categories/?page=2")
+
+        self.assertEqual(
+            second_page.status_code,
+            status.HTTP_200_OK,
+        )
+        self.assertEqual(second_page.data["count"], 21)
+        self.assertEqual(len(second_page.data["results"]), 1)
+        self.assertIsNone(second_page.data["next"])
+        self.assertIsNotNone(second_page.data["previous"])
